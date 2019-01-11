@@ -1,0 +1,52 @@
+version: "2"
+
+services:
+    nginx:
+        container_name: container-nginx
+        image: nginx:alpine
+        volumes:
+            - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+            - ./laravel/public:/var/www/laravel/public
+        ports:
+            - 80:80
+        depends_on:
+            - phpfpm
+    phpfpm:
+        container_name: container-phpfpm
+        build:
+            context: ./phpfpm
+            dockerfile: ./Dockerfile
+        volumes:
+            - ./laravel:/var/www/laravel
+            - ./phpfpm/conf.d/php.ini:/usr/local/etc/php/php.ini
+        depends_on:
+            - mysql
+        environment:
+            - DB_HOST=mysql
+            - DB_DATABASE=sample
+            - DB_USERNAME=root
+            - DB_PASSWORD=pass
+    mysql:
+        container_name: container-mysql
+        image: mysql:5.7
+        volumes:
+            - ./mysql:/var/lib/mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=pass
+            - MYSQL_DATABASE=sample
+        ports:
+            - 3306:3306
+    phpmyadmin:
+        container_name: container-phpmyadmin
+        image: phpmyadmin/phpmyadmin
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=mysql
+            - PMA_USER=root
+            - PMA_PASSWORD=pass
+        depends_on:
+            - mysql
+        ports:
+            - 8080:80
+        volumes:
+            - ./phpmyadmin/sessions:/sessions
